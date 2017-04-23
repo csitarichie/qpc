@@ -44,6 +44,7 @@
 #include "qequeue.h"  /* QK kernel uses the native QP event queue  */
 #include "qmpool.h"   /* QK kernel uses the native QP memory pool  */
 #include "qpset.h"    /* QK kernel uses the native QP priority set */
+#include "../ports/lint/stdint.h"
 
 /****************************************************************************/
 /* QF configuration for QK */

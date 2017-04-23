@@ -18,6 +18,8 @@
 #ifndef dpp_h
 #define dpp_h
 
+#include <qep.h>
+
 enum DPPSignals {
     EAT_SIG = Q_USER_SIG, /* published by Table to let a philosopher eat */
     DONE_SIG,       /* published by Philosopher when done eating */

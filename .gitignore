@@ -53,6 +53,7 @@ QSpy/
 lib/
 obj/
 output/
+cmake-*
 
 
 doxygen/html/
