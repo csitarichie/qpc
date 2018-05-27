@@ -7,6 +7,7 @@
       <file path="$PROJECT_DIR$/examples" />
       <file path="$PROJECT_DIR$/include" />
       <file path="$PROJECT_DIR$/ports" />
+      <file path="$PROJECT_DIR$/qtools" />
       <file path="$PROJECT_DIR$/source" />
     </sourceRoots>
   </component>

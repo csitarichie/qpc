@@ -1,61 +1,10 @@
 cmake_minimum_required(VERSION 3.7)
-project(QP)
+project(qp)
 
 set(CMAKE_C_STANDARD 11)
 
-option(USE_CLANG "build QP with clang" OFF) # OFF is the default
 option(USE_QSPY "build QP with QSPY" OFF) # OFF is the default
 option(BUILD_RELEASE "build release version" OFF) # OFF is the default
-
-if (USE_CLANG)
-    message(STATUS "building with clang-3.9")
-    # set(CMAKE_TOOLCHAIN_FILE "toolchain_llvm.cmake")
-    SET (CMAKE_C_COMPILER             "/usr/lib/llvm-3.9/bin/clang")
-    SET (CMAKE_C_FLAGS                "-Wall -std=c11")
-    SET (CMAKE_C_FLAGS_DEBUG          "-g")
-    SET (CMAKE_C_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
-    SET (CMAKE_C_FLAGS_RELEASE        "-O4 -DNDEBUG")
-    SET (CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
-
-    SET (CMAKE_CXX_COMPILER             "/usr/lib/llvm-3.9/bin/clang++")
-    SET (CMAKE_CXX_FLAGS                "-Wall")
-    SET (CMAKE_CXX_FLAGS_DEBUG          "-g")
-    SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
-    SET (CMAKE_CXX_FLAGS_RELEASE        "-O4 -DNDEBUG")
-    SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-
-    SET (CMAKE_AR      "/usr/lib/llvm-3.9/bin/llvm-ar")
-    SET (CMAKE_LINKER  "/usr/lib/llvm-3.9/bin/llvm-ld")
-    SET (CMAKE_NM      "/usr/lib/llvm-3.9/bin/llvm-nm")
-    SET (CMAKE_OBJDUMP "/usr/lib/llvm-3.9/bin/llvm-objdump")
-    SET (CMAKE_RANLIB  "/usr/lib/llvm-3.9/bin/llvm-ranlib")
-
-    SET(CMAKE_C_LINK_EXECUTABLE "/usr/lib/llvm-3.9/bin/llvm-ld <OBJECTS> -o  <TARGET> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>")
-    SET(CMAKE_CXX_LINK_EXECUTABLE "/usr/lib/llvm-3.9/bin/llvm-ld <OBJECTS> -o  <TARGET> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>")
-
-    SET(CMAKE_FIND_ROOT_PATH /usr/lib/llvm-3.8/bin)
-    SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-    SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-    SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-endif ()
-
-add_compile_options(-pthread)
-add_compile_options(-ffunction-sections)
-add_compile_options(-fdata-sections)
-add_compile_options(-O -Wall -W)
-add_compile_options(-Werror)
-
-if (USE_QSPY)
-    message(STATUS "QSPY traceing is enabled")
-    add_definitions(-DQ_SPY)
-endif ()
-
-
-
-if (BUILD_RELEASE)
-    message(STATUS "building release")
-    add_definitions(-DNDEBUG)
-endif ()
 
 set(PORT_DIR "ports/posix")
 
@@ -77,6 +26,7 @@ if(USE_QSPY)
     list(APPEND QP_SRCS "source/qs_rx.c")
     list(APPEND QP_SRCS "source/qs_fp.c")
     list(APPEND QP_SRCS "source/qs_64bit.c")
+    list(APPEND QP_SRCS "include/qstamp.c")
 endif(USE_QSPY)
 
 set(QP_PORT_SRCS "${PORT_DIR}/qf_port.c")
@@ -90,13 +40,37 @@ list(SORT QP_PORT_HEADER)
 file(GLOB QP_PUB_HEADER "include/*.h")
 list(SORT QP_PUB_HEADER)
 
-include_directories(
-        ${PORT_DIR}
-        include
-        source
-)
-
-set(SOURCE_FILES ${QP_SRCS} ${QP_PORT_SRC} )
+set(SOURCE_FILES ${QP_SRCS} ${QP_PORT_SRCS} )
 set(HEADER_FILES ${QP_PORT_HEADER} ${QP_PUB_HEADER} ${QP_PRIV_HEADER})
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 add_library(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
+target_link_libraries(${PROJECT_NAME} Threads::Threads)
+
+target_include_directories(${PROJECT_NAME}
+                           PUBLIC ${PORT_DIR}
+                                  include
+                           PRIVATE source)
+
+target_compile_options(${PROJECT_NAME} PUBLIC -ffunction-sections
+                                              -fdata-sections
+                                              -O -Wall -W
+                                              -Werror)
+
+if (USE_QSPY)
+    message(STATUS "QSPY traceing is enabled")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DQ_SPY)
+    add_library(qspy_host INTERFACE)
+    target_sources(qspy_host INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/qtools/qspy/source/qspy.c)
+    target_include_directories(qspy_host INTERFACE qtools/qspy/include)
+endif ()
+
+if (BUILD_RELEASE)
+    message(STATUS "building release")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DNDEBUG)
+endif ()
+
+add_subdirectory(examples/posix/dpp)

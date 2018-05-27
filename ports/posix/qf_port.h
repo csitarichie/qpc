@@ -81,26 +81,26 @@ extern pthread_mutex_t QF_pThreadMutex_; /* mutex for QF critical section */
 /* interface used only inside QF implementation, but not in applications */
 #ifdef QP_IMPL
 
-    /* QF-specific scheduler locking (not used at this point) */
-    #define QF_SCHED_STAT_
-    #define QF_SCHED_LOCK_(dummy) ((void)0)
-    #define QF_SCHED_UNLOCK_()    ((void)0)
+/* QF-specific scheduler locking (not used at this point) */
+#define QF_SCHED_STAT_
+#define QF_SCHED_LOCK_(dummy) ((void)0)
+#define QF_SCHED_UNLOCK_()    ((void)0)
 
-    /* POSIX active object event queue customization... */
-    #define QACTIVE_EQUEUE_WAIT_(me_) \
+/* POSIX active object event queue customization... */
+#define QACTIVE_EQUEUE_WAIT_(me_) \
         while ((me_)->eQueue.frontEvt == (QEvt *)0) \
             pthread_cond_wait(&(me_)->osObject, &QF_pThreadMutex_)
-    #define QACTIVE_EQUEUE_SIGNAL_(me_) \
+#define QACTIVE_EQUEUE_SIGNAL_(me_) \
         Q_ASSERT_ID(410, QF_active_[(me_)->prio] != (QActive *)0); \
         pthread_cond_signal(&(me_)->osObject)
 
-    /* native QF event pool operations */
-    #define QF_EPOOL_TYPE_  QMPool
-    #define QF_EPOOL_INIT_(p_, poolSto_, poolSize_, evtSize_) \
+/* native QF event pool operations */
+#define QF_EPOOL_TYPE_  QMPool
+#define QF_EPOOL_INIT_(p_, poolSto_, poolSize_, evtSize_) \
         QMPool_init(&(p_), poolSto_, poolSize_, evtSize_)
-    #define QF_EPOOL_EVENT_SIZE_(p_)  ((p_).blockSize)
-    #define QF_EPOOL_GET_(p_, e_, m_) ((e_) = (QEvt *)QMPool_get(&(p_), (m_)))
-    #define QF_EPOOL_PUT_(p_, e_)     (QMPool_put(&(p_), e_))
+#define QF_EPOOL_EVENT_SIZE_(p_)  ((p_).blockSize)
+#define QF_EPOOL_GET_(p_, e_, m_) ((e_) = (QEvt *)QMPool_get(&(p_), (m_)))
+#define QF_EPOOL_PUT_(p_, e_)     (QMPool_put(&(p_), e_))
 
 #endif /* QP_IMPL */
 

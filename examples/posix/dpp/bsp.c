@@ -122,7 +122,7 @@ void QF_onCleanup(void) {
 }
 /*..........................................................................*/
 void QF_onClockTick(void) {
-    struct timeval timeout = { 0 };  /* timeout for select() */
+    struct timeval timeout = {0, 0};  /* timeout for select() */
     fd_set con; /* FD set representing the console */
 
     QF_TICK_X(0U, &l_clock_tick); /* perform the QF clock tick processing */
@@ -132,7 +132,8 @@ void QF_onClockTick(void) {
     /* check if a console input is available, returns immediately */
     if (0 != select(1, &con, 0, 0, &timeout)) { /* any descriptor set? */
         char ch;
-        read(0, &ch, 1);
+        ssize_t chars_read;
+readmore:        chars_read = read(0, &ch, 1);
         if (ch == '\33') { /* ESC pressed? */
             BSP_terminate(0);
         }
@@ -142,6 +143,7 @@ void QF_onClockTick(void) {
         else if (ch == 's') {
             QF_PUBLISH(Q_NEW(QEvt, SERVE_SIG), &l_clock_tick);
         }
+        if (chars_read != 0 ) goto readmore;
     }
 }
 /*..........................................................................*/
